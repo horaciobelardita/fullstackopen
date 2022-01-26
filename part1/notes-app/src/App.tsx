@@ -38,6 +38,20 @@ function App() {
   const notesToShow = showAll
     ? notes
     : notes.filter((note) => note.important === true);
+
+  const handleToggleImportance = (id: number) => {
+    const note = notes.find((note) => note.id === id);
+    axios
+      .patch<NoteType>("http://localhost:3001/notes/" + id, {
+        important: !note?.important,
+      })
+      .then(({ data }) =>
+        setNotes((prevNotes) =>
+          prevNotes.map((note) => (note.id === id ? data : note))
+        )
+      );
+  };
+
   console.log("render", notes.length, "notes");
   return (
     <div className="App">
@@ -52,7 +66,11 @@ function App() {
       ) : (
         <ul>
           {notesToShow.map((note) => (
-            <Note note={note} key={note.id} />
+            <Note
+              onToggleImportance={handleToggleImportance.bind(null, note.id)}
+              note={note}
+              key={note.id}
+            />
           ))}
         </ul>
       )}
