@@ -28,7 +28,7 @@ export type NoteType = typeof notes[0];
 
 ReactDOM.render(
   <React.StrictMode>
-    <App notes={notes} />
+    <App />
   </React.StrictMode>,
   document.getElementById("root")
 );
