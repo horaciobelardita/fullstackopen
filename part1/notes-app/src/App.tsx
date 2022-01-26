@@ -2,8 +2,7 @@ import "./App.css";
 import { Note } from "./components/Note";
 import React, { useEffect, useState } from "react";
 import { NoteType } from "./main";
-import axios from "axios";
-
+import noteService from "./services/notes";
 function App() {
   const [notes, setNotes] = useState<NoteType[]>([]);
   const [newNote, setNewNote] = useState("");
@@ -11,8 +10,8 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   useEffect(() => {
     console.log("running useEffect");
-    axios.get<NoteType[]>("http://localhost:3001/notes").then(({ data }) => {
-      setNotes(data);
+    noteService.getAll().then((notes) => {
+      setNotes(notes);
       setIsLoading(false);
     });
   }, []);
@@ -24,12 +23,10 @@ function App() {
       date: new Date().toISOString(),
       important: Math.random() < 0.5,
     };
-    axios
-      .post<NoteType>("http://localhost:3001/notes", noteObject)
-      .then(({ data }) => {
-        setNotes((prevNotes) => [...prevNotes, data]);
-        setNewNote("");
-      });
+    noteService.create(noteObject).then((returnedNote) => {
+      setNotes((prevNotes) => [...prevNotes, returnedNote]);
+      setNewNote("");
+    });
   };
   const handleNoteChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setNewNote(event.target.value);
@@ -41,15 +38,22 @@ function App() {
 
   const handleToggleImportance = (id: number) => {
     const note = notes.find((note) => note.id === id);
-    axios
-      .patch<NoteType>("http://localhost:3001/notes/" + id, {
+    if (!note) return;
+    noteService
+      .update(id, {
         important: !note?.important,
       })
-      .then(({ data }) =>
+      .then((returnedNote) =>
         setNotes((prevNotes) =>
-          prevNotes.map((note) => (note.id === id ? data : note))
+          prevNotes.map((note) => (note.id === id ? returnedNote : note))
         )
-      );
+      )
+      .catch(() => {
+        console.error(
+          `the note '${note.content}' was already deleted from server`
+        );
+        setNotes(notes.filter((n) => n.id !== id));
+      });
   };
 
   console.log("render", notes.length, "notes");
