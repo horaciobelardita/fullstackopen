@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./App.css";
 import { Filter } from "./components/Filter";
 import { PersonForm } from "./components/PersonForm";
 import { Persons } from "./components/Persons";
+import personService from "./services/persons";
 
 export type Person = {
   id: number;
@@ -11,27 +12,49 @@ export type Person = {
 };
 
 function App() {
-  const [persons, setPersons] = useState<Person[]>([
-    { name: "Arto Hellas", number: "040-123456", id: 1 },
-    { name: "Ada Lovelace", number: "39-44-5323523", id: 2 },
-    { name: "Dan Abramov", number: "12-43-234345", id: 3 },
-    { name: "Mary Poppendieck", number: "39-23-6423122", id: 4 },
-  ]);
+  const [persons, setPersons] = useState<Person[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
 
+  useEffect(() => {
+    personService.getAll().then(setPersons);
+  }, []);
+
   const handleSubmitPersonForm = (name: string, number: string) => {
-    const alreadyExists = persons.find(
+    const foundedPerson = persons.find(
       (person) => person.name.toLowerCase() === name.toLowerCase()
     );
-    if (alreadyExists) {
-      alert(`${name} is already added to phonebook`);
+    if (foundedPerson) {
+      const isUpdateConfirmed = window.confirm(
+        `${name} is already added to phonebook, replace the old number with a new one?`
+      );
+      if (isUpdateConfirmed) {
+        personService
+          .update(foundedPerson.id, { number })
+          .then((returnedPerson) =>
+            setPersons((prevPersons) =>
+              prevPersons.map((person) =>
+                person.id === foundedPerson.id ? returnedPerson : person
+              )
+            )
+          );
+      }
       return;
     }
-    const id =
-      persons.length > 0
-        ? Math.max(...persons.map((person) => person.id)) + 1
-        : 1;
-    setPersons((prevPersons) => [...prevPersons, { id, name, number }]);
+    personService.create({ name, number }).then((returnedPerson) => {
+      setPersons((prevPersons) => [...prevPersons, returnedPerson]);
+    });
+  };
+
+  const handleDeletePerson = (personObjToRemove: Person) => {
+    if (window.confirm(`Delete ${personObjToRemove.name}?`)) {
+      personService
+        .destroy(personObjToRemove.id)
+        .then(() =>
+          setPersons((prevPersons) =>
+            prevPersons.filter((person) => person.id !== personObjToRemove.id)
+          )
+        );
+    }
   };
 
   const personsToShow = !searchTerm
@@ -47,7 +70,7 @@ function App() {
       <h3>Add a new</h3>
       <PersonForm onSubmit={handleSubmitPersonForm} />
       <h3>Numbers</h3>
-      <Persons persons={personsToShow} />
+      <Persons onDelete={handleDeletePerson} persons={personsToShow} />
     </div>
   );
 }
