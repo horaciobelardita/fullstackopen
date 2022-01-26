@@ -1,20 +1,33 @@
-import "./App.css";
 import { Note } from "./components/Note";
 import React, { useEffect, useState } from "react";
 import { NoteType } from "./main";
 import noteService from "./services/notes";
+import { NotificationMessage } from "./components/NotificationMessage";
 function App() {
   const [notes, setNotes] = useState<NoteType[]>([]);
   const [newNote, setNewNote] = useState("");
   const [showAll, setShowAll] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   useEffect(() => {
-    console.log("running useEffect");
-    noteService.getAll().then((notes) => {
-      setNotes(notes);
-      setIsLoading(false);
-    });
+    noteService
+      .getAll()
+      .then((notes) => {
+        setNotes(notes);
+      })
+      .catch(() => {
+        setErrorMessage("Can not fetch the notes. Try again later");
+      })
+      .finally(() => setIsLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (!errorMessage) return;
+    const timeout = setTimeout(() => {
+      setErrorMessage(null);
+    }, 5000);
+    return () => clearTimeout(timeout);
+  }, [errorMessage]);
 
   const addNote = (event: React.FormEvent) => {
     event.preventDefault();
@@ -49,26 +62,30 @@ function App() {
         )
       )
       .catch(() => {
-        console.error(
+        setErrorMessage(
           `the note '${note.content}' was already deleted from server`
         );
         setNotes(notes.filter((n) => n.id !== id));
       });
   };
 
-  console.log("render", notes.length, "notes");
   return (
     <div className="App">
-      <h1>Notes</h1>
-      <div>
-        <button onClick={() => setShowAll(!showAll)}>
-          show {showAll ? "important" : "all"}
-        </button>
-      </div>
+      <h1 className="App__heading">Notes</h1>
+      <NotificationMessage message={errorMessage} />
+      {notes.length > 0 && (
+        <div className="App__filter">
+          <button onClick={() => setShowAll(!showAll)}>
+            show {showAll ? "important" : "all"}
+          </button>
+        </div>
+      )}
       {isLoading ? (
-        <p>Loading....</p>
+        <div className="container">
+          <p className="loader">Loading....</p>
+        </div>
       ) : (
-        <ul>
+        <ul className="notes container">
           {notesToShow.map((note) => (
             <Note
               onToggleImportance={handleToggleImportance.bind(null, note.id)}
@@ -78,8 +95,12 @@ function App() {
           ))}
         </ul>
       )}
-      <form onSubmit={addNote}>
-        <input value={newNote} onChange={handleNoteChange} />
+      <form onSubmit={addNote} className="form container">
+        <input
+          className="form__input"
+          value={newNote}
+          onChange={handleNoteChange}
+        />
         <button type="submit">save</button>
       </form>
     </div>
