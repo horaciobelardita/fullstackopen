@@ -1,6 +1,6 @@
 import axios from "axios";
 import { NoteType } from "../main";
-const baseUrl = "http://localhost:3001/notes";
+const baseUrl = "http://localhost:3001/api/notes";
 
 const getAll = async () => {
   const { data } = await axios.get<NoteType[]>(baseUrl);
