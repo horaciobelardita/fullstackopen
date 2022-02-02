@@ -1,79 +1,45 @@
 import React from "react";
-import Checkbox from "./Checkbox";
-import Input from "./Input";
-import Radio from "./Radio";
-import Select from "./Select";
-import { useForm } from "./useForm";
+import styles from "./App.module.css";
+import styled, { css } from "styled-components";
+const Button = styled.a`
+  display: inline-block;
+  border-radius: 4px;
+  padding: 0.5rem 0;
+  margin: 0.5rem 1rem;
+  width: 11rem;
+  color: white;
+  border: 2px solid white;
+  background: transparent;
+  text-align: center;
+  text-decoration: none;
+  ${(props) =>
+    props.primary
+      ? css`
+          background: black;
+        `
+      : css`
+          color: #3c3c3c;
+          background: white;
+          border: 2px solid #3c3c3c;
+        `}
+`;
 
-const colorsArray = ["red", "green", "blue", "black"];
-const capitalize = (text) => text[0].toUpperCase() + text.slice(1);
 const App = () => {
-  const [colors, setColors] = React.useState([]);
-  const [numbers, setNumbers] = React.useState("");
-  const [gender, setGender] = React.useState("");
-  const [languages, setLanguages] = React.useState(["JS"]);
-  const name = useForm(true);
-
-  const handleChange = ({ target }) => {
-    if (target.checked) {
-      setColors((prevColors) => [...prevColors, target.value]);
-    } else {
-      setColors((prevColors) =>
-        prevColors.filter((color) => color !== target.value)
-      );
-    }
-  };
-
   return (
-    <form
-      onSubmit={(event) => {
-        event.preventDefault();
-        if (!name.validate()) {
-          console.log("form invalid");
-        } else {
-          console.log("form is valid");
-        }
-      }}
-    >
-      {colorsArray.map((color) => (
-        <div key={color}>
-          <label htmlFor={color}>{capitalize(color)}</label>
-          <input
-            checked={colors.includes(color)}
-            onChange={handleChange}
-            type="checkbox"
-            id={color}
-            value={color}
-          />
-        </div>
-      ))}
-      <Select value={numbers} setValue={setNumbers} options={["1", "2", "3"]} />
-      <div>
-        <Radio
-          value={gender}
-          setValue={setGender}
-          options={["Masculino", "Femenino"]}
-        />
-      </div>
-      <div>
-        <Checkbox
-          value={languages}
-          setValue={setLanguages}
-          options={["JS", "PHP", "Java"]}
-        />
-      </div>
-      <div>
-        <Input
-          type="text"
-          value={name.value}
-          onBlur={name.onBlur}
-          onChange={name.onChange}
-          placeholder="Name"
-          error={name.error}
-        />
-      </div>
-      <button type="submit">Send</button>
-    </form>
+    <div>
+      <h1 className={`${styles["text-center"]} ${styles["font-bold"]}`}>App</h1>
+      <Button
+        primary
+        href="https://es.reactjs.org/"
+        target="_blank"
+        rel="noopener"
+      >
+        React
+      </Button>
+      <Button href="https:/google.com/" target="_blank" rel="noopener">
+        Google
+      </Button>
+    </div>
   );
 };
 
